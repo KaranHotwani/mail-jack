@@ -43,8 +43,21 @@ Request body
 Success response (per‑recipient)
 ```json
 {
-  "status": "success | partial | failed",
-  "messageID": ""
+  "status": "SUCCESS"| "PARTIAL_SUCCESS" | "FAILED",
+  "results": [
+    {
+      "email": "user1@example.com",
+      "status": "SUCCESS",
+      "messageId": "010e0199b4711bc0-459734c9-418f-4f9d-982a-dbe86dd1f3f5-000000",
+      "error": ""
+    },
+    {
+      "email": "user2@example.com",
+      "status": "SUCCESS",
+      "messageId": "010e0199b4711bc1-8590683f-4390-4d2a-a11b-698a29569699-000000",
+      "error": ""
+    }
+  ]
 }
 ```
 
@@ -71,12 +84,14 @@ MIT
 
 Roadmap
 -------
-- Split email sending to individual SES calls per recipient
+- [x] Basic HTTP server
+- [x] Send email API endpoint (`POST /send-email`)
+- [x] Split email sending to individual SES calls per recipient
 - Create an npm package to expose a client SDK for triggering the Go API
 - Auto-start Go server when the npm package send method is called, if not already running
 - Add PostgreSQL to store email logs (requests, responses, errors)
 - Test cases — unit and integration tests for all critical functionality.
-- Add goroutines to optimize email sending (non-blocking/concurrent)
+- [x] Add goroutines to optimize email sending (non-blocking/concurrent)
 - Host Go server as a Lambda function triggered via API Gateway for serverless email sending
 - Make email sending fully asynchronous using SQS (queue) and SNS (optional notifications)
 - Build a simple UI to track email logs in PostgreSQL
