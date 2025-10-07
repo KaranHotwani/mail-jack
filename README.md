@@ -89,7 +89,7 @@ Roadmap
 - [x] Split email sending to individual SES calls per recipient
 - Create an npm package to expose a client SDK for triggering the Go API
 - Auto-start Go server when the npm package send method is called, if not already running
-- Add PostgreSQL to store email logs (requests, responses, errors)
+- [x] Add PostgreSQL to store email logs (requests, responses, errors)
 - Test cases — unit and integration tests for all critical functionality.
 - [x] Add goroutines to optimize email sending (non-blocking/concurrent)
 - Host Go server as a Lambda function triggered via API Gateway for serverless email sending

@@ -1,11 +1,14 @@
 package models
 
+import "time"
+
 type EmailRequest struct {
 	From    string   `json:"from"`
 	To      []string `json:"to"`
 	Subject string   `json:"subject"`
 	Body    string   `json:"body"`
 	HTML    string   `json:"html"`
+	CCEmails []string `json:"ccEmails"`
 }
 
 // EmailStatus is a typed enum for overall and per‑recipient status
@@ -27,4 +30,14 @@ type RecipientResult struct {
 	Status    EmailStatus `json:"status"`
 	MessageID string      `json:"messageId"`
 	Error     string      `json:"error"`
+}
+
+type  EmailLog struct { 
+	From    string   `json:"from"`
+	To      []string `json:"to"`
+	Subject string   `json:"subject"`
+	Body    string   `json:"body"`
+	HTML    string   `json:"html"`
+	CCEmails []string `json:"ccEmails"`
+	Created_at time.Time `json:"created_at"`
 }

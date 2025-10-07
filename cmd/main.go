@@ -11,6 +11,8 @@ import (
 	provider "github.com/kk/mail-jack/internal/provider"
 	"github.com/kk/mail-jack/internal/service"
 	"github.com/kk/mail-jack/internal/server"
+	"github.com/kk/mail-jack/internal/db"
+	repository "github.com/kk/mail-jack/internal/repository"
 )
 
 func main() {
@@ -38,16 +40,26 @@ func main() {
 		log.Fatalf("Unsupported provider: %s", providerName)
 	}
 
+	dbConn, err := db.InitPosgres()
+	if(err!= nil) {
+		log.Fatal("Main failed to open postgres connection:", err)
+	}
+	
+	repo:= repository.InitEmailLogRepo(dbConn)
+
 	emailService := &service.EmailService{
 		Providers: map[string]provider.SendEmailProvider{
 			"SES": selectedProvider,
 		},
+		LogRepo: repo,
 	}
 
 	port := os.Getenv("PORT")
 	if port == "" {
 		port = "8080"
 	}
+
+	
 
 	fmt.Printf("🚀 Email HTTP server running on port %s using provider %s\n", port, providerName)
 	log.Fatal(server.StartHTTPServer(emailService, port))
