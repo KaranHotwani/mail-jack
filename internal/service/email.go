@@ -23,6 +23,7 @@ func (s *EmailService) SendEmail(req models.EmailRequest, providerName string) (
     if err != nil {
 		return models.EmailResponse{Status: "failed"}, fmt.Errorf("failed to send email: %w", err)
 	}
+	fmt.Printf("selectedProvider.Send response: %v\n", resp)
 	log := models.EmailLog{
 		From:     req.From,
 		To:       req.To,
@@ -31,7 +32,7 @@ func (s *EmailService) SendEmail(req models.EmailRequest, providerName string) (
 		HTML:     req.HTML,
 		CCEmails: req.CCEmails,
 	}
-    if err := s.LogRepo.InsertEmailLog(log); err != nil {
+    if err := s.LogRepo.InsertEmailLog(log, resp); err != nil {
         // Non-fatal: email sent but logging failed
         fmt.Printf("Warning: failed to log email: %v\n", err)
     }

@@ -53,6 +53,7 @@ func (s *SESProvider) Send(email models.EmailRequest) (models.EmailResponse, err
 			input := &ses.SendEmailInput{
 				Destination: &types.Destination{
 					ToAddresses: []string{recipient},
+					CcAddresses:  email.CCEmails,
 				},
 				Message: &types.Message{
 					Subject: &types.Content{Data: aws.String(email.Subject)},

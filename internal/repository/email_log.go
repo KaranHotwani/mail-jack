@@ -29,6 +29,8 @@ func InitEmailLogRepo(db *sql.DB) *EmailLogRepository {
 		body TEXT,
 		html TEXT,
 		cc_emails JSONB,
+		status TEXT,
+    	message_id TEXT,
 		created_at TIMESTAMP NOT NULL
 	);
 	`
@@ -36,10 +38,15 @@ func InitEmailLogRepo(db *sql.DB) *EmailLogRepository {
 	return &EmailLogRepository{DB: db}
 }
 
-func ( r *EmailLogRepository) InsertEmailLog(log models.EmailLog) error{
+func ( r *EmailLogRepository) InsertEmailLog(log models.EmailLog, resp models.EmailResponse) error{
 	ccJSON, err := json.Marshal(log.CCEmails)
 	if err != nil {
 		return fmt.Errorf("failed to marshal ccEmails: %w", err)
+	}
+
+	recipientMap := make(map[string]models.RecipientResult)
+	for _, result := range resp.Results {
+		recipientMap[result.Email] = result
 	}
 
 	const maxWorkers= 10
@@ -58,9 +65,10 @@ func ( r *EmailLogRepository) InsertEmailLog(log models.EmailLog) error{
 		go func() {
 			defer wg.Done()
 			for to := range tasks {
+				result := recipientMap[to]
 				query := `
-					INSERT INTO email_logs (from_email, to_email, subject, body, html, cc_emails, created_at)
-					VALUES ($1, $2, $3, $4, $5, $6, $7)
+					INSERT INTO email_logs (from_email, to_email, subject, body, html, cc_emails, created_at, status, message_id)
+					VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 				`
 				_, err := r.DB.Exec(
 					query,
@@ -71,17 +79,19 @@ func ( r *EmailLogRepository) InsertEmailLog(log models.EmailLog) error{
 					log.HTML,
 					ccJSON,
 					time.Now(),
+					string(result.Status),
+					result.MessageID,
 				)
 				
 				if err!= nil{
 					fmt.Printf("failed to insert log for %s: %v\n", to, err)
 				}
-				fmt.Printf("Done Insert sql loggs")
 			}
 		}()
 	}
 
 	
 	wg.Wait()
+	fmt.Printf("Done Insert sql logs to db")
 	return nil
 }
