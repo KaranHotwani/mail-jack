@@ -29,18 +29,27 @@ PORT=8080 EMAIL_PROVIDER=SES AWS_REGION=us-east-1 go run ./cmd
 API
 - POST /send-email
 
-Request body
+Request
+
+Content-Type: application/json
+
+Body (JSON):
+
 ```json
 {
   "from": "sender@example.com",
   "to": ["user1@example.com", "user2@example.com"],
   "subject": "Hello",
   "body": "Plain text body",
-  "html": "<p>HTML body</p>"
+  "html": "<p>HTML body</p>",
+  "ccEmails": ["cc1@example.com"]
 }
 ```
 
-Success response (per‑recipient)
+Success response
+
+HTTP 200 with JSON body describing overall status and per-recipient results:
+
 ```json
 {
   "status": "SUCCESS"| "PARTIAL_SUCCESS" | "FAILED",
@@ -61,16 +70,37 @@ Success response (per‑recipient)
 }
 ```
 
-Error responses (JSON)
-- 400: `{ "error": "Invalid request" }`
-- 500: `{ "error": "..." }`
+Error responses
 
-Build
+- 400 `{ "error": "Invalid request" }`
+- 500 `{ "error": "..." }`
+
+Quick example (curl)
+
+```bash
+curl -X POST http://localhost:8080/send-email \
+  -H "Content-Type: application/json" \
+  -d '{"from":"sender@example.com","to":["user@example.com"],"subject":"Hi","body":"Hello","html":"<p>Hello</p>"}'
+```
+
+Build & Run
+
+Build the binary:
+
 ```bash
 go build -o mail-jack ./cmd
 ```
 
-Deploy (Linux binary)
+Run using `go run` (development):
+
+```bash
+go run ./cmd
+# or with environment variables:
+PORT=8080 EMAIL_PROVIDER=SES AWS_REGION=us-east-1 go run ./cmd
+```
+
+Run the built binary:
+
 ```bash
 PORT=8080 EMAIL_PROVIDER=SES AWS_REGION=us-east-1 ./mail-jack
 ```
@@ -80,7 +110,7 @@ Notes
 - If exposing to end users via npm, publish a small JS/TS client that POSTs to `/send-email`.
 
 License
-MIT
+- MIT
 
 Roadmap
 -------
