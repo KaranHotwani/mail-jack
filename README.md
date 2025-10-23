@@ -19,7 +19,12 @@ Environment variables
 - AWS_REGION: AWS region (e.g. us-east-1)
 - AWS credentials: via IAM role or env (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, optional `AWS_SESSION_TOKEN`)
 - MAIL_JACK_API_KEY: API key for authentication (required for all requests)
+- DATABASE_URL: PostgreSQL connection string (required)
 
+DATABASE_URL format:
+```
+postgres://username:password@host:port/database?sslmode=require
+```
 Run locally
 ```bash
 go run ./cmd
