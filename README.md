@@ -18,20 +18,24 @@ Environment variables
 - EMAIL_PROVIDER: provider name (SES)
 - AWS_REGION: AWS region (e.g. us-east-1)
 - AWS credentials: via IAM role or env (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, optional `AWS_SESSION_TOKEN`)
+- MAIL_JACK_API_KEY: API key for authentication (required for all requests)
 
 Run locally
 ```bash
 go run ./cmd
-# or
-PORT=8080 EMAIL_PROVIDER=SES AWS_REGION=us-east-1 go run ./cmd
 ```
 
 API
 - POST /send-email
 
+Authentication
+All requests require API key authentication via the `X-API-KEY` header.
+
 Request
 
-Content-Type: application/json
+Headers:
+- Content-Type: application/json
+- X-API-KEY: your_api_key (must match MAIL_JACK_API_KEY environment variable)
 
 Body (JSON):
 
@@ -73,6 +77,7 @@ HTTP 200 with JSON body describing overall status and per-recipient results:
 Error responses
 
 - 400 `{ "error": "Invalid request" }`
+- 401 `{ "error": "X-API-KEY header is required" }` or `{ "error": "Invalid API key" }`
 - 500 `{ "error": "..." }`
 
 Quick example (curl)
@@ -80,6 +85,7 @@ Quick example (curl)
 ```bash
 curl -X POST http://localhost:8080/send-email \
   -H "Content-Type: application/json" \
+  -H "X-API-KEY: your_secret_api_key" \
   -d '{"from":"sender@example.com","to":["user@example.com"],"subject":"Hi","body":"Hello","html":"<p>Hello</p>"}'
 ```
 
@@ -95,14 +101,12 @@ Run using `go run` (development):
 
 ```bash
 go run ./cmd
-# or with environment variables:
-PORT=8080 EMAIL_PROVIDER=SES AWS_REGION=us-east-1 go run ./cmd
 ```
 
 Run the built binary:
 
 ```bash
-PORT=8080 EMAIL_PROVIDER=SES AWS_REGION=us-east-1 ./mail-jack
+./mail-jack
 ```
 
 Notes

@@ -6,12 +6,14 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/kk/mail-jack/internal/middleware"
 	"github.com/kk/mail-jack/internal/models"
 	"github.com/kk/mail-jack/internal/service"
 )
 
 func StartHTTPServer(svc *service.EmailService, port string) error {
-	http.HandleFunc("/send-email", func(w http.ResponseWriter, r *http.Request) {
+	// Create the email handler function
+	emailHandler := func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 
 		if r.Method != http.MethodPost {
@@ -47,7 +49,10 @@ func StartHTTPServer(svc *service.EmailService, port string) error {
 		}
 
 		json.NewEncoder(w).Encode(resp)
-	})
+	}
+
+	// Wrap the handler with API key authentication middleware
+	http.HandleFunc("/send-email", middleware.APIKeyAuth(emailHandler))
 
 	return http.ListenAndServe(":"+port, nil)
 }
