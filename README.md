@@ -30,6 +30,23 @@ Run locally
 go run ./cmd
 ```
 
+Docker: Build and Run
+---------------------
+
+Create a `.env` file with required variables.
+
+Build the image:
+
+```bash
+docker build -t mail-jack:latest .
+```
+
+Run the container using your `.env` file:
+
+```bash
+docker run -d -p 8080:8080 --env-file .env mail-jack:latest
+```
+
 API
 - POST /send-email
 
