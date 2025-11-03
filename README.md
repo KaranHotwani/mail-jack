@@ -1,66 +1,81 @@
-Mail Jack
-=========
+# Mail Jack
 
-Lightweight HTTP service to send emails via providers (currently AWS SES). Includes per-recipient status reporting and JSON error responses.
+Lightweight Go-based HTTP service to send emails via providers (currently **AWS SES**).  
+It offers **per-recipient tracking**, **synchronous responses**, and **structured JSON errors** — all through a single endpoint.
 
-Features
-- AWS SES provider
-- Synchronous API: returns actual send status
-- Per‑recipient results (success/failed, messageId, error)
-- JSON errors with proper HTTP status codes
+---
 
-Requirements
-- Go 1.22+ (module sets 1.24.x toolchain)
+## ✨ Features
+
+- **AWS SES provider** (more coming soon)
+- **Synchronous API:** returns actual send status per recipient
+- **Detailed logging** — logs every request, response, and error in PostgreSQL for easy debugging and analytics 
+- **Docker support** for easy deployment
+- **Open source** and self-hostable anywhere
+
+---
+
+## 🧩 Requirements
+
+- Go **1.22+** (module sets **1.24.x** toolchain)
 - AWS SES configured (verified sender/domain)
+- PostgreSQL (for email logs)
 
-Environment variables
-- PORT: HTTP port (default: 8080)
-- EMAIL_PROVIDER: provider name (SES)
-- AWS_REGION: AWS region (e.g. us-east-1)
-- AWS credentials: via IAM role or env (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, optional `AWS_SESSION_TOKEN`)
-- MAIL_JACK_API_KEY: API key for authentication (required for all requests)
-- DATABASE_URL: PostgreSQL connection string (required)
+---
 
-DATABASE_URL format:
+## ⚙️ Environment Variables
+
+| Variable | Description | Default |
+|-----------|--------------|----------|
+| `PORT` | HTTP port | `8080` |
+| `EMAIL_PROVIDER` | Email provider name (`SES`) | — |
+| `AWS_REGION` | AWS region (e.g. `us-east-1`) | — |
+| `AWS_ACCESS_KEY_ID` | AWS Access Key | — |
+| `AWS_SECRET_ACCESS_KEY` | AWS Secret Key | — |
+| `AWS_SESSION_TOKEN` | Optional session token | — |
+| `MAIL_JACK_API_KEY` | API key for authentication | **required** |
+| `DATABASE_URL` | PostgreSQL connection string | **required** |
+
+Format:
 ```
 postgres://username:password@host:port/database?sslmode=require
 ```
-Run locally
+
+---
+
+## 🧱 Run Locally
+
 ```bash
 go run ./cmd
 ```
 
-Docker: Build and Run
----------------------
+---
 
-Create a `.env` file with required variables.
+## 🐳 Docker
 
-Build the image:
+Create a `.env` file with all variables (.sample.env available), then:
 
 ```bash
+# Build the image
 docker build -t mail-jack:latest .
-```
 
-Run the container using your `.env` file:
-
-```bash
+# Run the container
 docker run -d -p 8080:8080 --env-file .env mail-jack:latest
 ```
 
-API
-- POST /send-email
+---
 
-Authentication
-All requests require API key authentication via the `X-API-KEY` header.
+## 📬 API
 
-Request
+### POST `/send-email`
 
-Headers:
-- Content-Type: application/json
-- X-API-KEY: your_api_key (must match MAIL_JACK_API_KEY environment variable)
+#### Headers
+```text
+Content-Type: application/json
+X-API-KEY: your_api_key
+```
 
-Body (JSON):
-
+#### Body (JSON)
 ```json
 {
   "from": "sender@example.com",
@@ -72,83 +87,69 @@ Body (JSON):
 }
 ```
 
-Success response
-
-HTTP 200 with JSON body describing overall status and per-recipient results:
-
+#### ✅ Success Response
 ```json
 {
-  "status": "SUCCESS"| "PARTIAL_SUCCESS" | "FAILED",
+  "status": "SUCCESS",
   "results": [
     {
       "email": "user1@example.com",
       "status": "SUCCESS",
-      "messageId": "010e0199b4711bc0-459734c9-418f-4f9d-982a-dbe86dd1f3f5-000000",
-      "error": ""
-    },
-    {
-      "email": "user2@example.com",
-      "status": "SUCCESS",
-      "messageId": "010e0199b4711bc1-8590683f-4390-4d2a-a11b-698a29569699-000000",
+      "messageId": "010e0199b4711bc0-...",
       "error": ""
     }
   ]
 }
 ```
 
-Error responses
-
-- 400 `{ "error": "Invalid request" }`
-- 401 `{ "error": "X-API-KEY header is required" }` or `{ "error": "Invalid API key" }`
-- 500 `{ "error": "..." }`
-
-Quick example (curl)
-
-```bash
-curl -X POST http://localhost:8080/send-email \
-  -H "Content-Type: application/json" \
-  -H "X-API-KEY: your_secret_api_key" \
-  -d '{"from":"sender@example.com","to":["user@example.com"],"subject":"Hi","body":"Hello","html":"<p>Hello</p>"}'
+#### ❌ Error Responses
+```json
+400 { "error": "Invalid request" }
+401 { "error": "Invalid API key" }
+500 { "error": "Internal server error" }
 ```
 
-Build & Run
+#### Example (curl)
+```bash
+curl -X POST http://localhost:8080/send-email   -H "Content-Type: application/json"   -H "X-API-KEY: your_secret_api_key"   -d '{"from":"sender@example.com","to":["user@example.com"],"subject":"Hi","body":"Hello","html":"<p>Hello</p>"}'
+```
 
-Build the binary:
+---
+
+## 🧪 Build & Run
 
 ```bash
+# Build binary
 go build -o mail-jack ./cmd
-```
 
-Run using `go run` (development):
-
-```bash
-go run ./cmd
-```
-
-Run the built binary:
-
-```bash
+# Run
 ./mail-jack
 ```
 
-Notes
-- Imports/module path should match your repo: `module github.com/KaranHotwani/mail-jack`
-- If exposing to end users via npm, publish a small JS/TS client that POSTs to `/send-email`.
+---
 
-License
-- MIT
+## 🧭 Roadmap
 
-Roadmap
--------
-- [x] Basic HTTP server
-- [x] Send email API endpoint (`POST /send-email`)
-- [x] Split email sending to individual SES calls per recipient
-- Create an npm package to expose a client SDK for triggering the Go API
-- Auto-start Go server when the npm package send method is called, if not already running
-- [x] Add PostgreSQL to store email logs (requests, responses, errors)
-- Test cases — unit and integration tests for all critical functionality.
-- [x] Add goroutines to optimize email sending (non-blocking/concurrent)
-- Host Go server as a Lambda function triggered via API Gateway for serverless email sending
-- Make email sending fully asynchronous using SQS (queue) and SNS (optional notifications)
-- Build a simple UI to track email logs in PostgreSQL
-- Add webhooks feature to notify external systems on email success/failure
+- [x] Basic HTTP server  
+- [x] Send Email API (POST /send-email)  
+- [x] Split SES calls per recipient  
+- [x] PostgreSQL email logs  
+- [x] Concurrent sending via goroutines  
+- [ ] Async sending via SQS  
+- [ ] Web UI for logs  
+- [ ] Webhooks for status updates  
+- [ ] Add rate limiter
+- [ ] Retry and Failure mechanism  
+ 
+---
+
+---
+
+## 📜 License
+
+MIT © Karan Hotwani
+
+**Connect with me:**  
+[LinkedIn](https://www.linkedin.com/in/karan-hotwani-a9ba73167/) • [Twitter](https://x.com/Karan151997)
+
+
