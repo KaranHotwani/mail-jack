@@ -32,9 +32,8 @@ It offers **per-recipient tracking**, **synchronous responses**, and **structure
 | `AWS_REGION` | AWS region (e.g. `us-east-1`) | — |
 | `AWS_ACCESS_KEY_ID` | AWS Access Key | — |
 | `AWS_SECRET_ACCESS_KEY` | AWS Secret Key | — |
-| `AWS_SESSION_TOKEN` | Optional session token | — |
-| `MAIL_JACK_API_KEY` | API key for authentication | **required** |
-| `DATABASE_URL` | PostgreSQL connection string | **required** |
+| `MAIL_JACK_API_KEY` | API key for securing HTTP requests. This prevents unauthorized access to your email service and protects against abuse/spamming. Only clients with this key can send emails through Mail Jack. The key must be passed in the `X-API-KEY` header for all API calls. Set this to a secure random string (e.g., use `openssl rand -hex 32`). | **required** |
+| `DATABASE_URL` | PostgreSQL connection string. Mail Jack will automatically create the necessary tables (`email_logs`) on startup to store email delivery logs, including recipient details, status, and message IDs. | **required** |
 
 Format:
 ```
